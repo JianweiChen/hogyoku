@@ -1,5 +1,6 @@
 import subprocess
 import pickle
+import logging
 
 def bash(cmd):
     import subprocess

@@ -5,6 +5,7 @@ from pyspark.sql.types import *
 from pyspark.sql import Window, DataFrame, Row
 from pyspark.sql.functions import expr as SQL
 import logging
+from hogyoku.code import Courier, Code, bash
 
 class SparkCacheNotRegistException(Exception):
     def __init__(self):
@@ -20,6 +21,7 @@ class SparkCache(object):
     input_dfs = []
     code = None
     debug = False
+    spark = None
     dt = datetime.datetime.strftime(datetime.datetime.now()-datetime.timedelta(days=2), '%Y-%m-%d')
     def __init__(self):
         assert self.registed, "You must run SparkCache.regist([job], [hdfs_prefix]) first!!"
@@ -41,7 +43,8 @@ class SparkCache(object):
     def disable_debug(self): self.debug = False
 
     @classmethod
-    def regist(cls, job, hdfs_prefix, url=None, filenames=[]):
+    def regist(cls, spark, job, hdfs_prefix, url=None, filenames=[]):
+        cls.spark = spark
         cls.job = job
         cls.hdfs_prefix = hdfs_prefix
         cls.registed = True
@@ -51,7 +54,7 @@ class SparkCache(object):
             cls.code = Code(url=url)
             cls.filenames = filenames
             for filename in filenames:
-                file_content = code(filename)
+                file_content = cls.code(filename)
                 member_name = "file_content_"+filename.split("/")[-1].replace(".", "_")
                 setattr(cls, member_name, file_content)
             # globals()['cache'] = cls.cache
@@ -103,7 +106,7 @@ class SparkCache(object):
     def loadhdfs(self, field):
         if self.has(field):
             return self.get(field)
-        df = spark.read.format("orc").load(self.hdfspath(field))
+        df = self.spark.read.format("orc").load(self.hdfspath(field))
         return df
     
     def clear(self):

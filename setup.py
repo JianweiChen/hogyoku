@@ -2,7 +2,7 @@
 import setuptools
 setuptools.setup(
     name='hogyoku',
-    version='v0.1.5',
+    version='v0.1.12',
     description='hogyoku',
     py_modules=['hogyoku'],
     author='chenjianwei',
